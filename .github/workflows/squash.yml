@@ -1,0 +1,22 @@
+name: Enforce Squash Commits
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Count commits in PR
+        run: |
+          COMMITS=$(gh pr view ${{ github.event.pull_request.number }} --json commits --jq '.commits | length')
+          if [ "$COMMITS" -gt 1 ]; then
+            echo "❌ PR has $COMMITS commits! Squash them before merging."
+            exit 1
+          else
+            echo "✅ PR is properly squashed."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
